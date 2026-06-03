@@ -46,11 +46,13 @@ function createMemeElement(drop) {
 
                 if (videoId) {
                     const iframe = document.createElement("iframe");
-                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0`;
+                    // On ajoute un max de paramètres pour cacher l'UI de YouTube
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3`;
                     iframe.allow = "autoplay; encrypted-media";
                     iframe.style.border = "none";
                     iframe.style.width = "100%";
-                    iframe.style.height = "100%";
+                    iframe.style.aspectRatio = "16 / 9"; // Fixe le problème des bandes noires
+                    iframe.style.borderRadius = "12px";
                     iframe.style.pointerEvents = "none";
                     wrapper.appendChild(iframe);
                 } else {

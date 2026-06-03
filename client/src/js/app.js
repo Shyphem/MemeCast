@@ -11,6 +11,8 @@
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { check } from '@tauri-apps/plugin-updater';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-shell';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // ============================================
@@ -167,15 +169,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    const CURRENT_VERSION = "v0.2.0";
+
     elements.btnCheckUpdate.addEventListener("click", async () => {
         elements.btnCheckUpdate.disabled = true;
         elements.btnCheckUpdate.textContent = "Recherche...";
         try {
-            const update = await check();
-            if (update) {
-                elements.btnCheckUpdate.textContent = "Téléchargement...";
-                await update.downloadAndInstall();
-                elements.btnCheckUpdate.textContent = "Redémarrage requis";
+            const res = await fetch("https://api.github.com/repos/Shyphem/MemeCast/releases/latest");
+            if (!res.ok) throw new Error("GitHub API Error");
+            const data = await res.json();
+            
+            if (data.tag_name && data.tag_name !== CURRENT_VERSION && data.tag_name !== "0.2.0") {
+                elements.btnCheckUpdate.textContent = "Nouvelle version !";
+                await open(data.html_url); // Ouvre la page GitHub dans le navigateur
+                setTimeout(() => {
+                    elements.btnCheckUpdate.textContent = "Vérifier";
+                    elements.btnCheckUpdate.disabled = false;
+                }, 3000);
             } else {
                 elements.btnCheckUpdate.textContent = "À jour !";
                 setTimeout(() => {
@@ -185,7 +195,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         } catch (e) {
             console.error("[System] Erreur updater:", e);
-            elements.btnCheckUpdate.textContent = "Erreur";
+            elements.btnCheckUpdate.textContent = "Erreur (CORS ou réseau)";
             setTimeout(() => {
                 elements.btnCheckUpdate.textContent = "Vérifier";
                 elements.btnCheckUpdate.disabled = false;
@@ -288,21 +298,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // ============================================
+    // ============================================
     // Titlebar Buttons (Tauri IPC)
     // ============================================
 
     elements.btnMinimize.addEventListener("click", async () => {
         try {
-            await getCurrentWindow().minimize();
+            await invoke("minimize_settings");
         } catch {
-            // Fallback si pas dans Tauri (dev dans navigateur)
             console.log("[UI] Minimize (non-Tauri environment)");
         }
     });
 
     elements.btnClose.addEventListener("click", async () => {
         try {
-            await getCurrentWindow().hide();
+            // Fermer = Cacher dans la zone de notification
+            await invoke("toggle_settings");
         } catch {
             console.log("[UI] Close (non-Tauri environment)");
         }

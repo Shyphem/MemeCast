@@ -31,6 +31,20 @@ fn toggle_settings(app: tauri::AppHandle) {
     }
 }
 
+/// Minimise la fenêtre de réglages.
+#[tauri::command]
+fn minimize_settings(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("settings") {
+        let _ = win.minimize();
+    }
+}
+
+/// Quitte l'application complètement.
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -39,6 +53,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             set_click_through,
             toggle_settings,
+            minimize_settings,
+            quit_app,
         ])
         .setup(|app| {
             // --- Overlay : activer click-through au démarrage ---
