@@ -22,7 +22,7 @@ class Config:
 
     # Constantes de l'app
     APP_NAME: str = "MemeCast"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.2.0"
 
     # Limites
     MAX_SOUND_DURATION: float = 10.0  # secondes

@@ -127,7 +127,7 @@ function handleMessage(data) {
 
         case "react":
             console.log(`[WS] 😂 React: ${data.emoji} ×${data.count}`);
-            Effects.createEmojiRain(
+            window.Effects.createEmojiRain(
                 window.reactContainer,
                 data.emoji,
                 data.count || 5

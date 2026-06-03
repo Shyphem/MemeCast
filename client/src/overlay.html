@@ -26,28 +26,25 @@
 
     <script type="module">
         // Initialisation : connecter au serveur WebSocket
-        document.addEventListener("DOMContentLoaded", () => {
-            // Charger la config depuis localStorage (sauvée par la fenêtre settings)
-            const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
-            const wsUrl = config.ws_url || "ws://localhost:8000/ws";
-            const guildId = config.guild_id || "";
-            const discordId = config.discord_id || "";
+        // Charger la config depuis localStorage (sauvée par la fenêtre settings)
+        const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+        const wsUrl = config.ws_url || "ws://localhost:8000/ws";
+        const guildId = config.guild_id || "";
+        const discordId = config.discord_id || "";
 
-            if (!guildId || !discordId) {
-                console.warn("[MemeCast] Config manquante — en attente de configuration...");
-                // On attend que la config soit mise à jour par la fenêtre settings
-                const checkInterval = setInterval(() => {
-                    const cfg = JSON.parse(localStorage.getItem("memecast_config") || "{}");
-                    if (cfg.guild_id && cfg.discord_id) {
-                        clearInterval(checkInterval);
-                        initWebSocket(cfg.ws_url || "ws://localhost:8000/ws", cfg.guild_id, cfg.discord_id);
-                    }
-                }, 2000);
-                return;
-            }
-
-            initWebSocket(wsUrl, guildId, discordId);
-        });
+        if (!guildId || !discordId) {
+            console.warn("[MemeCast] Config manquante — en attente de configuration...");
+            // On attend que la config soit mise à jour par la fenêtre settings
+            const checkInterval = setInterval(() => {
+                const cfg = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+                if (cfg.guild_id && cfg.discord_id) {
+                    clearInterval(checkInterval);
+                    window.initWebSocket(cfg.ws_url || "ws://localhost:8000/ws", cfg.guild_id, cfg.discord_id);
+                }
+            }, 2000);
+        } else {
+            window.initWebSocket(wsUrl, guildId, discordId);
+        }
     </script>
 </body>
 </html>

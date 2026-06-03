@@ -10,7 +10,7 @@ const overlayContainer = document.getElementById("overlay-container");
 const reactContainer = document.getElementById("react-container");
 
 // File d'attente
-const memeQueue = new MemeQueue();
+const memeQueue = new window.MemeQueue();
 
 /**
  * Crée l'élément DOM pour un drop.
@@ -37,24 +37,52 @@ function createMemeElement(drop) {
         }
 
         case "video": {
-            const video = document.createElement("video");
-            video.src = drop.media_url;
-            video.autoplay = true;
-            video.loop = false;
-            video.muted = false; // Son activé par défaut
-            video.playsInline = true;
+            const urlLower = drop.media_url.toLowerCase();
+            const isYouTube = urlLower.includes("youtube.com") || urlLower.includes("youtu.be");
+            
+            if (isYouTube) {
+                const videoIdMatch = drop.media_url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                const videoId = videoIdMatch ? videoIdMatch[1] : null;
 
-            // Lire la config de volume
-            const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
-            video.volume = (config.volume ?? 50) / 100;
+                if (videoId) {
+                    const iframe = document.createElement("iframe");
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0`;
+                    iframe.allow = "autoplay; encrypted-media";
+                    iframe.style.border = "none";
+                    iframe.style.width = "100%";
+                    iframe.style.height = "100%";
+                    iframe.style.pointerEvents = "none";
+                    wrapper.appendChild(iframe);
+                } else {
+                    wrapper.remove();
+                    window.memeQueue.skip();
+                }
+            } else if (urlLower.includes("tiktok.com") || urlLower.includes("instagram.com") || urlLower.includes("twitter.com") || urlLower.includes("x.com")) {
+                const textDiv = document.createElement("div");
+                textDiv.className = "meme-text";
+                textDiv.style.fontSize = "1.5rem";
+                textDiv.textContent = `[Lien réseau social non supporté en direct]`;
+                wrapper.appendChild(textDiv);
+            } else {
+                // Direct video file (.mp4, .webm, Discord attachment)
+                const video = document.createElement("video");
+                video.src = drop.media_url;
+                video.autoplay = true;
+                video.loop = false;
+                video.muted = false;
+                video.playsInline = true;
 
-            video.onerror = () => {
-                console.error(`[Overlay] Video load error: ${drop.media_url}`);
-                wrapper.remove();
-                memeQueue.skip();
-            };
+                const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+                video.volume = (config.volume ?? 50) / 100;
 
-            wrapper.appendChild(video);
+                video.onerror = () => {
+                    console.error(`[Overlay] Video load error: ${drop.media_url}`);
+                    wrapper.remove();
+                    window.memeQueue.skip();
+                };
+
+                wrapper.appendChild(video);
+            }
             break;
         }
 
@@ -101,8 +129,8 @@ function displayDrop(drop) {
     const finalPosition = config.position || drop.position;
 
     // Appliquer taille et position
-    Effects.applySize(element, drop.size);
-    Effects.applyPosition(element, finalPosition);
+    window.Effects.applySize(element, drop.size);
+    window.Effects.applyPosition(element, finalPosition);
 
     // Ajouter au DOM
     overlayContainer.appendChild(element);
@@ -111,10 +139,10 @@ function displayDrop(drop) {
     const entryEffect = drop.effects?.find(e =>
         ["fade_in", "bounce", "slide_in"].includes(e)
     ) || "fade_in";
-    Effects.animateIn(element, entryEffect);
+    window.Effects.animateIn(element, entryEffect);
 
     // Effets continus
-    Effects.applyContinuousEffect(element, drop.effects);
+    window.Effects.applyContinuousEffect(element, drop.effects);
 
     // Jouer le son d'annonce si activé
     playAnnounceSoundIfEnabled();
@@ -138,7 +166,7 @@ async function removeDrop(drop) {
         ["fade_out", "slide_out"].includes(e)
     ) || "fade_out";
 
-    await Effects.animateOut(element, exitEffect);
+    await window.Effects.animateOut(element, exitEffect);
     element.remove();
 
     console.log(`[Overlay] ❌ Retiré: ${drop.id}`);
