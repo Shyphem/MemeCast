@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PyInstaller
+*.spec
+
+# Media cache
+media_cache/
+temp/
+
+# Logs
+*.log
+logs/
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Tauri / Rust
+client/src-tauri/target/
+client/src-tauri/gen/

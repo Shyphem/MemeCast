@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "MemeCast",
+  "version": "0.1.0",
+  "identifier": "com.memecast.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "settings",
+        "title": "MemeCast",
+        "url": "src/index.html",
+        "width": 500,
+        "height": 650,
+        "resizable": false,
+        "center": true,
+        "visible": true,
+        "decorations": false
+      },
+      {
+        "label": "overlay",
+        "url": "src/overlay.html",
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": true,
+        "maximized": true
+      }
+    ],
+    "trayIcon": {
+      "id": "main-tray",
+      "iconPath": "icons/icon.png",
+      "tooltip": "MemeCast — Meme Overlay"
+    },
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "windows": {
+      "nsis": {
+        "displayLanguageSelector": false,
+        "installMode": "currentUser",
+        "languages": ["French", "English"],
+        "startMenuFolder": "MemeCast"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Shyphem/MemeCast/releases/latest/download/latest.json"
+      ],
+      "pubkey": "PUBLIC_KEY_HERE"
+    }
+  }
+}
