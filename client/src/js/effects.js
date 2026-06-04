@@ -97,5 +97,8 @@ const Effects = {
     },
 };
 
+// Export ES6 module
+export { Effects };
+
 // Export global pour les autres scripts
 window.Effects = Effects;

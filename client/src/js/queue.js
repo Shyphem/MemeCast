@@ -133,5 +133,8 @@ class MemeQueue {
     }
 }
 
+// Export ES6 module
+export { MemeQueue };
+
 // Export global
 window.MemeQueue = MemeQueue;

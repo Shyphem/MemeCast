@@ -158,5 +158,8 @@ function handleMessage(data) {
     }
 }
 
+// Export ES6 module
+export { initWebSocket };
+
 // Export global
 window.initWebSocket = initWebSocket;

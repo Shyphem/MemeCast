@@ -246,12 +246,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         elements.btnConnect.textContent = "Connexion...";
         elements.btnConnect.disabled = true;
 
-        // Tester la connexion WebSocket
+        // Tester la connexion WebSocket (test rapide, on ferme après)
         try {
             const testWs = new WebSocket(wsUrl);
 
             testWs.onopen = () => {
-                // Envoyer l'auth
+                // Envoyer l'auth pour vérifier que ça marche
                 testWs.send(JSON.stringify({
                     type: "auth",
                     guild_id: guildId,
@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === "auth_ok") {
-                        setStatus("online", `✅ Connecté ! (${data.online?.length || 0} en ligne)`);
+                        setStatus("online", `✅ Connecté ! (${(data.online?.length || 0) + 1} en ligne)`);
                         elements.btnConnect.textContent = "Reconnecter";
                     } else if (data.type === "auth_fail") {
                         setStatus("offline", `❌ ${data.reason}`);
@@ -273,8 +273,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     // ignore
                 }
                 elements.btnConnect.disabled = false;
-                // Garder la connexion ouverte pour la fenêtre settings aussi
-                // (la fenêtre overlay a sa propre connexion)
+                // IMPORTANT : Fermer la connexion test immédiatement !
+                // L'overlay a sa propre connexion permanente.
+                // Si on garde celle-ci ouverte, elle entre en conflit
+                // (même discord_id = le serveur ferme l'autre).
+                testWs.close(1000, "Test terminé");
             };
 
             testWs.onerror = () => {
@@ -284,6 +287,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             testWs.onclose = () => {
+                // Ne pas afficher "connexion perdue" si le test est terminé avec succès
                 if (elements.statusDot.classList.contains("connecting")) {
                     setStatus("offline", "❌ Connexion perdue");
                     elements.btnConnect.textContent = "Se connecter";

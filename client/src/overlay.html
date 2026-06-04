@@ -19,14 +19,24 @@
     <!-- Container pour les emojis (réactions) -->
     <div id="react-container"></div>
 
-    <script type="module" src="js/effects.js"></script>
-    <script type="module" src="js/queue.js"></script>
-    <script type="module" src="js/overlay.js"></script>
-    <script type="module" src="js/websocket.js"></script>
-
     <script type="module">
+        // Import dans l'ordre strict : dépendances d'abord, puis overlay, puis websocket
+        import { Effects } from './js/effects.js';
+        import { MemeQueue } from './js/queue.js';
+
+        // S'assurer que les globals sont disponibles AVANT d'importer overlay/websocket
+        window.Effects = Effects;
+        window.MemeQueue = MemeQueue;
+
+        // Maintenant on peut importer overlay (qui crée memeQueue via new window.MemeQueue())
+        await import('./js/overlay.js');
+
+        // Et enfin websocket (qui utilise window.memeQueue)
+        const wsModule = await import('./js/websocket.js');
+        const initWebSocket = wsModule.initWebSocket;
+        window.initWebSocket = initWebSocket;
+
         // Initialisation : connecter au serveur WebSocket
-        // Charger la config depuis localStorage (sauvée par la fenêtre settings)
         const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
         const wsUrl = config.ws_url || "ws://localhost:8000/ws";
         const guildId = config.guild_id || "";
@@ -34,17 +44,18 @@
 
         if (!guildId || !discordId) {
             console.warn("[MemeCast] Config manquante — en attente de configuration...");
-            // On attend que la config soit mise à jour par la fenêtre settings
             const checkInterval = setInterval(() => {
                 const cfg = JSON.parse(localStorage.getItem("memecast_config") || "{}");
                 if (cfg.guild_id && cfg.discord_id) {
                     clearInterval(checkInterval);
-                    window.initWebSocket(cfg.ws_url || "ws://localhost:8000/ws", cfg.guild_id, cfg.discord_id);
+                    initWebSocket(cfg.ws_url || "ws://localhost:8000/ws", cfg.guild_id, cfg.discord_id);
                 }
             }, 2000);
         } else {
-            window.initWebSocket(wsUrl, guildId, discordId);
+            initWebSocket(wsUrl, guildId, discordId);
         }
+
+        console.log("[MemeCast] ✅ Overlay initialisé");
     </script>
 </body>
 </html>
