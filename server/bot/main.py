@@ -157,16 +157,15 @@ async def on_ready():
     logger.info(f"🤖 Bot connecté en tant que {bot.user} (ID: {bot.user.id})")
     logger.info(f"   Serveurs: {len(bot.guilds)}")
 
-    # Sync les slash commands au guild spécifique (rapide, pas de rate limit)
+    # Nettoyer les commandes du guild spécifique si elles existaient pour éviter les doublons
     if config.GUILD_ID:
         guild = discord.Object(id=config.GUILD_ID)
-        bot.tree.copy_global_to(guild=guild)
-        synced = await bot.tree.sync(guild=guild)
-        logger.info(f"   ✅ {len(synced)} commandes synchronisées (guild {config.GUILD_ID})")
-    else:
-        # Sync global (peut prendre jusqu'à 1h pour se propager)
-        synced = await bot.tree.sync()
-        logger.info(f"   ✅ {len(synced)} commandes synchronisées (global)")
+        bot.tree.clear_commands(guild=guild)
+        await bot.tree.sync(guild=guild)
+
+    # Sync global (désormais instantané sur Discord)
+    synced = await bot.tree.sync()
+    logger.info(f"   ✅ {len(synced)} commandes synchronisées (globalement pour tous les serveurs)")
 
 
 # ============================================
