@@ -1,7 +1,7 @@
 # 🚀 MemeCast
 
 MemeCast is an interactive system consisting of a **Discord Bot** and a **Desktop Overlay Application**.
-It allows a Discord community to "drop" images, GIFs, YouTube videos, TikToks, or sounds directly onto the screens of other server members in real-time, using a transparent overlay.
+It allows a Discord community to "drop" images, GIFs, YouTube videos or sounds directly onto the screens of other server members in real-time, using a transparent overlay. Like the Live Chat of the CacaBox.
 
 ---
 
