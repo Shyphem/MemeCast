@@ -1,137 +1,137 @@
 # 🚀 MemeCast
 
-MemeCast est un système interactif composé d'un **Bot Discord** et d'une application **Desktop Overlay**.
-Il permet à une communauté Discord de "lancer" (drop) des images, des GIFs, des vidéos YouTube, des TikToks, ou des sons directement sur les écrans des autres membres du serveur, en temps réel et en surimpression (overlay transparent).
+MemeCast is an interactive system consisting of a **Discord Bot** and a **Desktop Overlay Application**.
+It allows a Discord community to "drop" images, GIFs, YouTube videos, TikToks, or sounds directly onto the screens of other server members in real-time, using a transparent overlay.
 
 ---
 
-## 🛠️ Architecture du projet
+## 🛠️ Project Architecture
 
-Le projet est divisé en deux parties principales :
-1. **Serveur (`/server`)** : Le cœur du système. Il contient le bot Discord (en Python via `discord.py`) et un serveur WebSocket (via `FastAPI` et `Uvicorn`) qui agit comme un hub pour transmettre les mèmes aux clients connectés.
-2. **Client (`/client`)** : L'application PC (développée avec `Tauri`, `Rust`, et `Vite/Vanilla JS`). Elle affiche une interface de réglages (pour se connecter) et une fenêtre totalement transparente (overlay) qui se superpose à vos jeux ou votre bureau pour afficher le contenu.
+The project is divided into two main parts:
+1. **Server (`/server`)**: The core of the system. It contains the Discord bot (in Python using `discord.py`) and a WebSocket server (using `FastAPI` and `Uvicorn`) that acts as a hub to transmit memes to connected clients.
+2. **Client (`/client`)**: The desktop application (developed with `Tauri`, `Rust`, and `Vite/Vanilla JS`). It provides a settings interface (for connection setup) and a fully transparent overlay window that sits on top of your games or desktop to display the content.
 
 ---
 
-## ⚙️ Prérequis
+## ⚙️ Prerequisites
 
-### Pour le Serveur
-- Un serveur VPS (Linux de préférence) ou un PC allumé H24
-- [Docker](https://docs.docker.com/get-docker/) et [Docker Compose](https://docs.docker.com/compose/install/)
+### For the Server
+- A VPS server (Linux preferred)
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 
-### Pour le Client (Compilation)
-- Windows (ou macOS/Linux)
+### For the Client (Build Process)
+- Windows (or macOS/Linux)
 - [Node.js](https://nodejs.org/) (v18+)
-- [Rust & Cargo](https://rustup.rs/) (Environnement de compilation C++ requis sur Windows, voir les [prérequis Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/))
+- [Rust & Cargo](https://rustup.rs/) (C++ build tools required on Windows, see [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites/))
 
 ---
 
-## 🤖 1. Configuration du Bot Discord
+## 🤖 1. Discord Bot Configuration
 
-Avant de lancer le serveur, vous devez créer le bot sur Discord :
+Before starting the server, you need to create the bot on Discord:
 
-1. Allez sur le [Discord Developer Portal](https://discord.com/developers/applications).
-2. Cliquez sur **"New Application"** et donnez-lui le nom `MemeCast`.
-3. Allez dans l'onglet **"Bot"** :
-   - Récupérez votre **Token** (gardez-le secret).
-   - ⚠️ **TRÈS IMPORTANT** : Dans la section **Privileged Gateway Intents**, activez **SERVER MEMBERS INTENT** (nécessaire pour pouvoir cibler un membre avec `@pseudo`).
-4. Allez dans l'onglet **"OAuth2" -> "URL Generator"** :
-   - Cochez les scopes `bot` et `applications.commands`.
-   - Cochez les permissions : `Send Messages`, `Embed Links`, `Attach Files`.
-   - Utilisez l'URL générée en bas pour inviter le bot sur votre serveur.
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Click on **"New Application"** and name it `MemeCast`.
+3. Go to the **"Bot"** tab:
+   - Copy your **Token** (keep it secret).
+   - ⚠️ **VERY IMPORTANT**: Under the **Privileged Gateway Intents** section, enable **SERVER MEMBERS INTENT** (this is required to target a specific member using `@username`).
+4. Go to the **"OAuth2" -> "URL Generator"** tab:
+   - Check the `bot` and `applications.commands` scopes.
+   - Check the following permissions: `Send Messages`, `Embed Links`, `Attach Files`.
+   - Use the generated URL at the bottom to invite the bot to your server.
 
 ---
 
-## 🖥️ 2. Installation du Serveur (Bot + WebSocket)
+## 🖥️ 2. Server Installation (Bot + WebSocket)
 
-Le serveur gère les commandes Discord et dispatche les médias aux applications client.
+The server handles Discord commands and dispatches media to the client applications.
 
-1. Allez dans le dossier du projet ou clonez-le sur votre VPS.
-2. Créez un fichier `.env` à la racine du projet (au même niveau que le `docker-compose.yml`) :
+1. Navigate to the project directory or clone it onto your VPS.
+2. Create a `.env` file at the root of the project (next to `docker-compose.yml`):
 
 ```env
-# Le Token de votre bot Discord
-DISCORD_TOKEN=MTEw...votre.token.secret...
+# Your Discord bot Token
+DISCORD_TOKEN=MTEw...your.secret.token...
 
-# L'ID de votre serveur Discord par défaut
+# Your default Discord Server (Guild) ID
 GUILD_ID=123456789012345678
 ```
 
-3. Lancez le serveur avec Docker Compose :
+3. Start the server using Docker Compose:
 
 ```bash
 sudo docker compose up -d --build
 ```
 
-Le bot va se connecter à Discord et le serveur WebSocket écoutera sur le port `8000`.
+The bot will connect to Discord and the WebSocket server will listen on port `8000`.
 
 ---
 
-## 💻 3. Compilation du Client (Application PC)
+## 💻 3. Client Compilation (Desktop App)
 
-L'application doit être compilée pour Windows (en `.exe`).
+The application needs to be compiled for Windows (as an `.exe`).
 
-1. Ouvrez un terminal et allez dans le dossier du client :
+1. Open a terminal and navigate to the client folder:
 ```bash
 cd client
 ```
 
-2. Installez les dépendances Node.js :
+2. Install Node.js dependencies:
 ```bash
 npm install
 ```
 
-3. Lancez la compilation avec Tauri :
+3. Start the build process with Tauri:
 ```bash
 npm run tauri build
 ```
-*(Le premier build peut prendre un peu de temps car il compile tout l'environnement Rust).*
+*(The first build may take some time as it compiles the entire Rust environment).*
 
-4. Une fois terminé, le programme d'installation se trouvera ici :
+4. Once finished, the installer will be located here:
 `client/src-tauri/target/release/bundle/nsis/MemeCast_0.2.0_x64-setup.exe`
 
-Envoyez cet installateur à vos amis !
+Send this installer to your friends!
 
 ---
 
-## 🎮 4. Utilisation
+## 🎮 4. Usage
 
-### Côté Client (Application)
-1. Lancez MemeCast.
-2. Remplissez vos informations dans les réglages :
-   - **Ton Pseudo** : Votre nom (pour la liste des connectés).
-   - **Adresse du serveur** : `ws://VOTRE_IP_VPS:8000/ws` (ou `ws://localhost:8000/ws` si test en local).
-   - **Guild ID** : L'ID du serveur Discord.
-   - **Ton Discord ID** : Votre propre ID utilisateur Discord (nécessaire pour que les autres puissent vous cibler).
-3. Cliquez sur **Se connecter**. Le voyant passera au vert et vous verrez les autres personnes en ligne.
-4. Réglez le **volume**, **l'opacité**, la **durée d'affichage** et fermez la fenêtre (elle restera active en arrière-plan).
+### Client Side (Application)
+1. Launch MemeCast.
+2. Fill in your details in the settings:
+   - **Username (Ton Pseudo)**: Your display name (for the online users list).
+   - **Server Address (Adresse du serveur)**: `ws://YOUR_VPS_IP:8000/ws` (or `ws://localhost:8000/ws` for local testing).
+   - **Guild ID**: The Discord server ID.
+   - **Your Discord ID (Ton Discord ID)**: Your personal Discord user ID (needed so others can target you).
+3. Click **Connect (Se connecter)**. The status indicator will turn green and you will see other online users.
+4. Adjust the **volume**, **opacity**, **display duration**, and close the window (it will remain active in the background).
 
-### Côté Discord (Commandes)
-Dans votre serveur Discord, utilisez la commande `/drop` :
+### Discord Side (Commands)
+In your Discord server, use the `/drop` command:
 
 ```text
 /drop url:https://youtu.be/xxx
-/drop media:[Fichier MP4/MP3/GIF/PNG]
-/drop text:"Bonjour tout le monde"
+/drop media:[MP4/MP3/GIF/PNG File]
+/drop text:"Hello everyone"
 ```
 
-**Options avancées du `/drop` :**
-- `target` : Mentionnez un membre précis (ex: `@Shyphem`) pour que le mème ne s'affiche QUE sur son écran !
-- `size` : Choisissez la taille d'affichage (Petit, Moyen, Grand, Plein écran).
-- `sound` : Attachez un fichier audio supplémentaire (ex: un `.mp3`) qui se jouera en même temps que votre image/GIF.
+**Advanced `/drop` options:**
+- `target`: Tag a specific member (e.g., `@Shyphem`) so the meme ONLY appears on their screen!
+- `size`: Choose the display size (Small, Medium, Large, Fullscreen).
+- `sound`: Attach an additional audio file (e.g., an `.mp3`) that will play at the same time as your image/GIF.
 
-**Contrôle de la file d'attente :**
-- `/skip` : Passe au mème suivant.
-- `/stop` : Arrête le mème en cours.
-- `/clear` : Vide entièrement la file d'attente.
+**Queue control:**
+- `/skip`: Skips to the next meme.
+- `/stop`: Stops the current meme.
+- `/clear`: Completely clears the meme queue.
 
 ---
 
-## ⚙️ Dépannage
+## ⚙️ Troubleshooting
 
-- **Rien ne s'affiche sur l'écran d'un ami ?**
-  Vérifiez que son application est bien au premier plan (ou en mode plein écran fenêtré pour les jeux) et que son `Discord ID` est le bon.
-- **La commande /drop ne trouve pas les membres (`target`) ?**
-  Assurez-vous d'avoir bien coché **SERVER MEMBERS INTENT** dans le portail développeur Discord et redémarrez le container Docker du bot.
-- **Le client indique "Connexion perdue" en boucle ?**
-  Vérifiez que le port `8000` est bien ouvert sur le pare-feu (ufw/iptables) de votre VPS.
+- **Nothing is showing up on a friend's screen?**
+  Ensure their application is running (or in borderless windowed mode for games) and that their `Discord ID` is correct in the settings.
+- **The /drop command can't find members (`target`)?**
+  Make sure you have enabled the **SERVER MEMBERS INTENT** in the Discord Developer Portal and restart the bot's Docker container.
+- **The client repeatedly says "Connection lost"?**
+  Check that port `8000` is open on your VPS firewall (ufw/iptables).
