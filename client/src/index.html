@@ -31,6 +31,11 @@
             </div>
 
             <div class="form-group">
+                <label for="input-username">Ton pseudo</label>
+                <input type="text" id="input-username" placeholder="MonPseudo" />
+            </div>
+
+            <div class="form-group">
                 <label for="input-ws-url">Adresse du serveur</label>
                 <input type="text" id="input-ws-url" placeholder="ws://localhost:8000/ws" />
             </div>
@@ -46,6 +51,15 @@
             </div>
 
             <button class="btn btn-primary" id="btn-connect">Se connecter</button>
+
+            <!-- Liste des utilisateurs en ligne -->
+            <div class="online-section" id="online-section" style="display: none;">
+                <div class="online-header">
+                    <span class="online-count" id="online-count">0</span>
+                    <span>en ligne</span>
+                </div>
+                <div class="online-list" id="online-list"></div>
+            </div>
         </section>
 
         <!-- Section : Système -->

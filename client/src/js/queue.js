@@ -67,10 +67,13 @@ class MemeQueue {
         }
 
         // Timer pour passer au suivant
-        const duration = (this.currentDrop.duration || 8) * 1000;
+        const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+        const durationSec = config.image_duration || this.currentDrop.duration || 8;
+        this.currentDrop.duration = durationSec; // Mettre à jour pour d'autres usages
+
         this.currentTimer = setTimeout(() => {
             this._finishCurrent();
-        }, duration);
+        }, durationSec * 1000);
     }
 
     /**

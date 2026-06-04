@@ -499,3 +499,79 @@ input[type="range"]:active::-webkit-slider-thumb {
     font-size: 12px;
     font-weight: 600;
 }
+
+/* ============================================
+   Online Users Section
+   ============================================ */
+
+.online-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.online-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.online-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--green);
+    color: #000;
+    font-weight: 700;
+    font-size: 0.75rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+}
+
+.online-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.online-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--bg-input);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.online-user-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px rgba(68, 217, 100, 0.5);
+    flex-shrink: 0;
+}
+
+.online-user-name {
+    font-weight: 500;
+}
+
+.online-user-you {
+    font-size: 0.7rem;
+    color: var(--accent-soft);
+    margin-left: auto;
+    font-weight: 600;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}

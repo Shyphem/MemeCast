@@ -42,6 +42,7 @@ URL_PATTERNS = {
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
 GIF_EXTENSIONS = (".gif",)
 VIDEO_EXTENSIONS = (".mp4", ".webm", ".mov")
+AUDIO_EXTENSIONS = (".mp3", ".wav", ".ogg", ".aac", ".flac")
 
 
 def detect_media_type(url: str) -> str:
@@ -53,6 +54,8 @@ def detect_media_type(url: str) -> str:
         return "image"
     if any(lower.endswith(ext) for ext in VIDEO_EXTENSIONS):
         return "video"
+    if any(lower.endswith(ext) for ext in AUDIO_EXTENSIONS):
+        return "audio"
     # Vérifier les plateformes
     for platform, pattern in URL_PATTERNS.items():
         if pattern.search(url):

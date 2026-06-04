@@ -23,12 +23,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const elements = {
         // Connexion
+        username: $("#input-username"),
         wsUrl: $("#input-ws-url"),
         guildId: $("#input-guild-id"),
         discordId: $("#input-discord-id"),
         btnConnect: $("#btn-connect"),
         statusDot: $(".status-dot"),
         statusText: $(".status-text"),
+
+        // Online
+        onlineSection: $("#online-section"),
+        onlineCount: $("#online-count"),
+        onlineList: $("#online-list"),
 
         // Système
         toggleAutostart: $("#toggle-autostart"),
@@ -75,6 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const cfg = loadConfig();
 
         // Connexion
+        elements.username.value = cfg.username || "";
         elements.wsUrl.value = cfg.ws_url || "ws://localhost:8000/ws";
         elements.guildId.value = cfg.guild_id || "";
         elements.discordId.value = cfg.discord_id || "";
@@ -112,6 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const activePos = document.querySelector(".pos-btn.active");
 
         return {
+            username: elements.username.value.trim(),
             ws_url: elements.wsUrl.value.trim(),
             guild_id: elements.guildId.value.trim(),
             discord_id: elements.discordId.value.trim(),
@@ -256,6 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     type: "auth",
                     guild_id: guildId,
                     discord_id: discordId,
+                    username: elements.username.value.trim() || "Anonyme",
                 }));
             };
 
@@ -324,9 +333,52 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // ============================================
+    // Online Users (polling localStorage)
+    // ============================================
+
+    function updateOnlineList() {
+        try {
+            const onlineData = JSON.parse(localStorage.getItem("memecast_online") || "{}");
+            const users = onlineData.users || [];
+            const count = onlineData.count || 0;
+
+            if (count > 0) {
+                elements.onlineSection.style.display = "block";
+                elements.onlineCount.textContent = count;
+
+                const cfg = loadConfig();
+                const myDiscordId = cfg.discord_id || "";
+
+                elements.onlineList.innerHTML = users.map(u => {
+                    const isYou = u.discord_id === myDiscordId;
+                    return `<div class="online-user">
+                        <span class="online-user-dot"></span>
+                        <span class="online-user-name">${u.username || 'Anonyme'}</span>
+                        ${isYou ? '<span class="online-user-you">TOI</span>' : ''}
+                    </div>`;
+                }).join("");
+            } else {
+                elements.onlineSection.style.display = "none";
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // Polling toutes les 2 secondes
+    setInterval(updateOnlineList, 2000);
+
+    // ============================================
     // Init
     // ============================================
 
-    restoreUI();
+    await restoreUI();
     console.log("[Settings] MemeCast settings loaded");
+
+    // Auto-connexion si la config est déjà remplie
+    const savedCfg = loadConfig();
+    if (savedCfg.guild_id && savedCfg.discord_id) {
+        console.log("[Settings] Config trouvée, test de connexion automatique...");
+        elements.btnConnect.click(); // Simule un clic sur le bouton
+    }
 });

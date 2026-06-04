@@ -29,6 +29,10 @@ let pingInterval = null;
  * Initialise la connexion WebSocket.
  */
 function initWebSocket(wsUrl, guildId, discordId) {
+    // Lire le pseudo depuis la config
+    const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+    const username = config.username || "Anonyme";
+
     if (ws && ws.readyState === WebSocket.OPEN) {
         console.log("[WS] Déjà connecté");
         return;
@@ -48,11 +52,12 @@ function initWebSocket(wsUrl, guildId, discordId) {
         console.log("[WS] ✅ Connecté !");
         reconnectDelay = 1000; // Reset le backoff
 
-        // Envoyer l'authentification
+        // Envoyer l'authentification avec le pseudo
         ws.send(JSON.stringify({
             type: "auth",
             guild_id: guildId,
             discord_id: discordId,
+            username: username,
         }));
 
         // Ping keep-alive toutes les 30s
@@ -77,6 +82,9 @@ function initWebSocket(wsUrl, guildId, discordId) {
         isConnected = false;
         clearInterval(pingInterval);
         pingInterval = null;
+
+        // Mettre à jour le statut dans localStorage
+        localStorage.setItem("memecast_online", JSON.stringify({ count: 0, users: [] }));
 
         // Ne pas reconnecter si c'est un close volontaire
         if (event.code !== 1000) {
@@ -114,10 +122,26 @@ function handleMessage(data) {
         case "auth_ok":
             isConnected = true;
             console.log(`[WS] Auth OK — ${data.message}`);
+            // Stocker la liste des utilisateurs en ligne
+            if (data.online) {
+                localStorage.setItem("memecast_online", JSON.stringify({
+                    count: data.online.length,
+                    users: data.online,
+                }));
+            }
             break;
 
         case "auth_fail":
             console.error(`[WS] Auth échouée: ${data.reason}`);
+            break;
+
+        case "online_update":
+            console.log(`[WS] 👥 En ligne: ${data.count} utilisateur(s)`);
+            // Stocker dans localStorage pour que la fenêtre settings puisse lire
+            localStorage.setItem("memecast_online", JSON.stringify({
+                count: data.count,
+                users: data.users || [],
+            }));
             break;
 
         case "drop":

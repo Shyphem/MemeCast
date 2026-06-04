@@ -98,6 +98,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
         guild_id = data.get("guild_id", "")
         discord_id = data.get("discord_id", "")
+        username = data.get("username", "Anonyme")
 
         if not guild_id or not discord_id:
             await websocket.send_json({
@@ -108,12 +109,12 @@ async def websocket_endpoint(websocket: WebSocket):
             return
 
         # Enregistrer la connexion
-        ws.register(websocket, discord_id, guild_id)
+        ws.register(websocket, discord_id, guild_id, username)
 
         await websocket.send_json({
             "type": "auth_ok",
             "message": f"Connecté ! ({ws.total} client(s) en ligne)",
-            "online": ws.get_online(guild_id),
+            "online": ws.get_online_users(guild_id),
         })
 
         # --- Boucle de réception (keep-alive) ---

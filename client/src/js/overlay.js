@@ -116,6 +116,26 @@ function createMemeElement(drop) {
         wrapper.appendChild(badge);
     }
 
+    // Audio attaché
+    if (drop.sound_url) {
+        const audio = document.createElement("audio");
+        audio.src = drop.sound_url;
+        audio.autoplay = true;
+        const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+        audio.volume = (config.volume ?? 50) / 100;
+        wrapper.appendChild(audio);
+    }
+
+    // Audio principal (si media_type == "audio")
+    if (drop.media_type === "audio" && drop.media_url) {
+        const audio = document.createElement("audio");
+        audio.src = drop.media_url;
+        audio.autoplay = true;
+        const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
+        audio.volume = (config.volume ?? 50) / 100;
+        wrapper.appendChild(audio);
+    }
+
     return wrapper;
 }
 
@@ -149,11 +169,6 @@ function displayDrop(drop) {
     // Jouer le son d'annonce si activé
     playAnnounceSoundIfEnabled();
 
-    // Jouer le son attaché
-    if (drop.sound_url) {
-        playSound(drop.sound_url);
-    }
-
     console.log(`[Overlay] ✅ Affiché: ${drop.media_type} (${drop.id})`);
 }
 
@@ -163,6 +178,17 @@ function displayDrop(drop) {
 async function removeDrop(drop) {
     const element = document.getElementById(`meme-${drop.id}`);
     if (!element) return;
+
+    // Stoppe tous les médias liés à ce drop avant de l'animer/retirer
+    const mediaElements = element.querySelectorAll("audio, video, iframe");
+    mediaElements.forEach(m => {
+        if (m.tagName === "IFRAME") {
+            m.src = ""; // Coupe la vidéo youtube immédiatement
+        } else {
+            m.pause();
+            m.removeAttribute("src");
+        }
+    });
 
     const exitEffect = drop.effects?.find(e =>
         ["fade_out", "slide_out"].includes(e)
@@ -174,26 +200,6 @@ async function removeDrop(drop) {
     console.log(`[Overlay] ❌ Retiré: ${drop.id}`);
 }
 
-/**
- * Joue un son court.
- */
-function playSound(url) {
-    try {
-        const audio = new Audio(url);
-        const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
-        audio.volume = (config.volume ?? 50) / 100;
-
-        // Limiter à 10 secondes
-        setTimeout(() => {
-            audio.pause();
-            audio.currentTime = 0;
-        }, 10000);
-
-        audio.play().catch(e => console.warn("[Audio] Erreur:", e));
-    } catch (e) {
-        console.warn("[Audio] Impossible de jouer:", e);
-    }
-}
 
 /**
  * Son d'annonce quand un mème arrive.
