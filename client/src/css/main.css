@@ -277,6 +277,37 @@ input[type="text"]:focus {
     box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
+select, .select-monitor {
+    width: auto;
+    min-width: 160px;
+    padding: 6px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+select:focus, .select-monitor:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
 /* ============================================
    Buttons
    ============================================ */

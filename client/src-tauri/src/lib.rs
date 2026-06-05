@@ -18,6 +18,46 @@ fn set_click_through(window: tauri::Window, ignore: bool) {
     let _ = window.set_ignore_cursor_events(ignore);
 }
 
+/// Retourne la liste des moniteurs disponibles.
+#[tauri::command]
+fn list_monitors(app: tauri::AppHandle) -> Vec<serde_json::Value> {
+    let monitors = app.available_monitors().unwrap_or_default();
+    monitors
+        .iter()
+        .enumerate()
+        .map(|(i, m)| {
+            let pos = m.position();
+            let size = m.size();
+            serde_json::json!({
+                "index": i,
+                "name": m.name().unwrap_or(&format!("Écran {}", i + 1)),
+                "width": size.width,
+                "height": size.height,
+                "x": pos.x,
+                "y": pos.y,
+            })
+        })
+        .collect()
+}
+
+/// Déplace l'overlay sur le moniteur indiqué par son index.
+#[tauri::command]
+fn move_overlay_to_monitor(app: tauri::AppHandle, monitor_index: usize) {
+    let monitors = app.available_monitors().unwrap_or_default();
+    if let Some(monitor) = monitors.get(monitor_index) {
+        if let Some(overlay) = app.get_webview_window("overlay") {
+            let pos = monitor.position();
+            let size = monitor.size();
+            let _ = overlay.set_position(tauri::Position::Physical(
+                tauri::PhysicalPosition::new(pos.x, pos.y),
+            ));
+            let _ = overlay.set_size(tauri::Size::Physical(
+                tauri::PhysicalSize::new(size.width, size.height),
+            ));
+        }
+    }
+}
+
 /// Affiche ou masque la fenêtre de réglages.
 #[tauri::command]
 fn toggle_settings(app: tauri::AppHandle) {
@@ -52,6 +92,8 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             set_click_through,
+            list_monitors,
+            move_overlay_to_monitor,
             toggle_settings,
             minimize_settings,
             quit_app,

@@ -12,7 +12,7 @@
         <div class="titlebar-left">
             <span class="titlebar-icon">🔥</span>
             <span class="titlebar-title">MemeCast</span>
-            <span class="titlebar-version">v0.2.0</span>
+            <span class="titlebar-version">v1.1</span>
         </div>
         <div class="titlebar-right">
             <button class="titlebar-btn" id="btn-minimize" title="Réduire">─</button>
@@ -80,6 +80,17 @@
             </div>
         </section>
 
+        <!-- Section : Écran -->
+        <section class="card">
+            <h2 class="card-title accent">🖥️ ÉCRAN</h2>
+            <div class="setting-row">
+                <label>Afficher l'overlay sur</label>
+                <select class="select-monitor" id="select-monitor">
+                    <option value="0">Chargement...</option>
+                </select>
+            </div>
+        </section>
+
         <!-- Section : Audio -->
         <section class="card">
             <h2 class="card-title accent">AUDIO</h2>
@@ -101,10 +112,9 @@
             </div>
 
             <div class="setting-row">
-                <label>Durée des images</label>
-                <div class="slider-group">
-                    <span class="slider-value" id="val-duration">8s</span>
-                    <input type="range" min="2" max="30" value="8" id="slider-duration" />
+                <div>
+                    <label>Durée des images</label>
+                    <small class="setting-hint">10s — Vidéos/sons coupent automatiquement à la fin</small>
                 </div>
             </div>
 

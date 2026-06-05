@@ -67,13 +67,28 @@ class MemeQueue {
         }
 
         // Timer pour passer au suivant
-        const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
-        const durationSec = config.image_duration || this.currentDrop.duration || 8;
-        this.currentDrop.duration = durationSec; // Mettre à jour pour d'autres usages
+        // Images/GIFs/texte : toujours 10 secondes max
+        // Vidéos/Audios : durée = durée du média (événement 'ended')
+        const mediaType = this.currentDrop.media_type;
 
-        this.currentTimer = setTimeout(() => {
-            this._finishCurrent();
-        }, durationSec * 1000);
+        if (mediaType === "video" || mediaType === "audio") {
+            // Pour vidéo/audio, on met un timer de sécurité long (5 min max)
+            // mais normalement c'est l'événement 'ended' qui coupe (voir overlay.js)
+            const maxDuration = 5 * 60; // 5 min max de sécurité
+            this.currentDrop.duration = maxDuration;
+
+            this.currentTimer = setTimeout(() => {
+                this._finishCurrent();
+            }, maxDuration * 1000);
+        } else {
+            // Images, GIFs, texte : fixé à 10 secondes
+            const IMAGE_DURATION = 10;
+            this.currentDrop.duration = IMAGE_DURATION;
+
+            this.currentTimer = setTimeout(() => {
+                this._finishCurrent();
+            }, IMAGE_DURATION * 1000);
+        }
     }
 
     /**

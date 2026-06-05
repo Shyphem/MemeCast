@@ -40,13 +40,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         toggleAutostart: $("#toggle-autostart"),
         btnCheckUpdate: $("#btn-check-update"),
 
+        // Écran
+        selectMonitor: $("#select-monitor"),
+
         // Audio
         sliderVolume: $("#slider-volume"),
         valVolume: $("#val-volume"),
         sliderOpacity: $("#slider-opacity"),
         valOpacity: $("#val-opacity"),
-        sliderDuration: $("#slider-duration"),
-        valDuration: $("#val-duration"),
         toggleAnnounce: $("#toggle-announce"),
 
         // Position
@@ -91,8 +92,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         elements.valVolume.textContent = `${cfg.volume ?? 50}%`;
         elements.sliderOpacity.value = cfg.opacity ?? 100;
         elements.valOpacity.textContent = `${cfg.opacity ?? 100}%`;
-        elements.sliderDuration.value = cfg.image_duration ?? 8;
-        elements.valDuration.textContent = `${cfg.image_duration ?? 8}s`;
         elements.toggleAnnounce.checked = cfg.announce_sound !== false;
 
         // Position
@@ -125,7 +124,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             discord_id: elements.discordId.value.trim(),
             volume: parseInt(elements.sliderVolume.value),
             opacity: parseInt(elements.sliderOpacity.value),
-            image_duration: parseInt(elements.sliderDuration.value),
             announce_sound: elements.toggleAnnounce.checked,
             random_position: elements.toggleRandomPos.checked,
             position: elements.toggleRandomPos.checked
@@ -152,7 +150,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setupSlider(elements.sliderVolume, elements.valVolume, "%");
     setupSlider(elements.sliderOpacity, elements.valOpacity, "%");
-    setupSlider(elements.sliderDuration, elements.valDuration, "s");
 
     // ============================================
     // Toggles
@@ -177,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    const CURRENT_VERSION = "v0.2.0";
+    const CURRENT_VERSION = "v1.1";
 
     elements.btnCheckUpdate.addEventListener("click", async () => {
         elements.btnCheckUpdate.disabled = true;
@@ -186,16 +183,32 @@ document.addEventListener("DOMContentLoaded", async () => {
             const res = await fetch("https://api.github.com/repos/Shyphem/MemeCast/releases/latest");
             if (!res.ok) throw new Error("GitHub API Error");
             const data = await res.json();
-            
-            if (data.tag_name && data.tag_name !== CURRENT_VERSION && data.tag_name !== "0.2.0") {
-                elements.btnCheckUpdate.textContent = "Nouvelle version !";
-                await open(data.html_url); // Ouvre la page GitHub dans le navigateur
+
+            const latestTag = data.tag_name;
+            // Comparer les versions (ignorer le "v" au début)
+            const currentClean = CURRENT_VERSION.replace(/^v/, "");
+            const latestClean = (latestTag || "").replace(/^v/, "");
+
+            if (latestClean && latestClean !== currentClean) {
+                // Chercher l'installeur .exe dans les assets
+                const exeAsset = data.assets?.find(a => a.name.endsWith("-setup.exe") || a.name.endsWith(".exe"));
+
+                if (exeAsset) {
+                    elements.btnCheckUpdate.textContent = `⬇️ ${latestTag} — Téléchargement...`;
+                    // Ouvre le lien de téléchargement direct dans le navigateur
+                    await open(exeAsset.browser_download_url);
+                    elements.btnCheckUpdate.textContent = `✅ Téléchargement lancé !`;
+                } else {
+                    // Pas d'exe trouvé, ouvrir la page des releases
+                    elements.btnCheckUpdate.textContent = `🆕 ${latestTag} disponible !`;
+                    await open(data.html_url);
+                }
                 setTimeout(() => {
                     elements.btnCheckUpdate.textContent = "Vérifier";
                     elements.btnCheckUpdate.disabled = false;
-                }, 3000);
+                }, 5000);
             } else {
-                elements.btnCheckUpdate.textContent = "À jour !";
+                elements.btnCheckUpdate.textContent = "✅ À jour !";
                 setTimeout(() => {
                     elements.btnCheckUpdate.textContent = "Vérifier";
                     elements.btnCheckUpdate.disabled = false;
@@ -203,13 +216,31 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         } catch (e) {
             console.error("[System] Erreur updater:", e);
-            elements.btnCheckUpdate.textContent = "Erreur (CORS ou réseau)";
+            elements.btnCheckUpdate.textContent = "❌ Erreur réseau";
             setTimeout(() => {
                 elements.btnCheckUpdate.textContent = "Vérifier";
                 elements.btnCheckUpdate.disabled = false;
             }, 3000);
         }
     });
+
+    // Auto-check au démarrage (silencieux)
+    setTimeout(async () => {
+        try {
+            const res = await fetch("https://api.github.com/repos/Shyphem/MemeCast/releases/latest");
+            if (!res.ok) return;
+            const data = await res.json();
+            const latestClean = (data.tag_name || "").replace(/^v/, "");
+            const currentClean = CURRENT_VERSION.replace(/^v/, "");
+            if (latestClean && latestClean !== currentClean) {
+                elements.btnCheckUpdate.textContent = `🆕 ${data.tag_name} !`;
+                elements.btnCheckUpdate.style.background = "var(--green)";
+                elements.btnCheckUpdate.style.color = "#000";
+            }
+        } catch (e) {
+            // Silencieux
+        }
+    }, 3000);
 
     function updatePositionGridState(isRandom) {
         elements.posButtons.forEach((btn) => {
@@ -375,10 +406,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     await restoreUI();
     console.log("[Settings] MemeCast settings loaded");
 
+    // --- Charger la liste des écrans ---
+    try {
+        const monitors = await invoke("list_monitors");
+        const savedCfg = loadConfig();
+        const savedMonitor = savedCfg.monitor_index ?? 0;
+
+        elements.selectMonitor.innerHTML = monitors.map((m, i) => {
+            const label = `${m.name} (${m.width}×${m.height})`;
+            return `<option value="${m.index}" ${m.index === savedMonitor ? 'selected' : ''}>${label}</option>`;
+        }).join("");
+
+        // Si un écran spécifique était sauvegardé, déplacer l'overlay
+        if (savedMonitor > 0 && savedMonitor < monitors.length) {
+            await invoke("move_overlay_to_monitor", { monitorIndex: savedMonitor });
+        }
+
+        elements.selectMonitor.addEventListener("change", async () => {
+            const idx = parseInt(elements.selectMonitor.value);
+            try {
+                await invoke("move_overlay_to_monitor", { monitorIndex: idx });
+                const cfg = collectConfig();
+                cfg.monitor_index = idx;
+                saveConfig(cfg);
+                console.log(`[Settings] Overlay déplacé sur écran ${idx}`);
+            } catch (e) {
+                console.error("[Settings] Erreur changement écran:", e);
+            }
+        });
+    } catch (e) {
+        console.log("[Settings] Multi-écran non disponible");
+        elements.selectMonitor.innerHTML = '<option>Non disponible</option>';
+        elements.selectMonitor.disabled = true;
+    }
+
     // Auto-connexion si la config est déjà remplie
-    const savedCfg = loadConfig();
-    if (savedCfg.guild_id && savedCfg.discord_id) {
+    const autoCfg = loadConfig();
+    if (autoCfg.guild_id && autoCfg.discord_id) {
         console.log("[Settings] Config trouvée, test de connexion automatique...");
-        elements.btnConnect.click(); // Simule un clic sur le bouton
+        elements.btnConnect.click();
     }
 });

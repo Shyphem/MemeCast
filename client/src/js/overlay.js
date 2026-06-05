@@ -83,6 +83,12 @@ function createMemeElement(drop) {
                     window.memeQueue.skip();
                 };
 
+                // Quand la vidéo finit → skip automatique
+                video.addEventListener("ended", () => {
+                    console.log(`[Overlay] 🎬 Vidéo terminée, skip auto`);
+                    window.memeQueue.skip();
+                });
+
                 wrapper.appendChild(video);
             }
             break;
@@ -133,6 +139,13 @@ function createMemeElement(drop) {
         audio.autoplay = true;
         const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
         audio.volume = (config.volume ?? 50) / 100;
+
+        // Quand l'audio finit → skip automatique
+        audio.addEventListener("ended", () => {
+            console.log(`[Overlay] 🎵 Audio terminé, skip auto`);
+            window.memeQueue.skip();
+        });
+
         wrapper.appendChild(audio);
     }
 
