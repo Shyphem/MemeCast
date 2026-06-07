@@ -46,8 +46,10 @@ function createMemeElement(drop) {
 
                 if (videoId) {
                     const iframe = document.createElement("iframe");
-                    // On ajoute un max de paramètres pour cacher l'UI de YouTube
-                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3`;
+                    const ytId = `yt-${Date.now()}`;
+                    iframe.id = ytId;
+                    // On ajoute enablejsapi=1 pour détecter la fin
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&enablejsapi=1`;
                     iframe.allow = "autoplay; encrypted-media";
                     iframe.style.border = "none";
                     iframe.style.width = "100%";
@@ -55,6 +57,30 @@ function createMemeElement(drop) {
                     iframe.style.borderRadius = "12px";
                     iframe.style.pointerEvents = "none";
                     wrapper.appendChild(iframe);
+
+                    // Charge l'API YouTube si elle n'est pas là
+                    if (!window.YT) {
+                        const tag = document.createElement('script');
+                        tag.src = "https://www.youtube.com/iframe_api";
+                        document.head.appendChild(tag);
+                    }
+
+                    // Attendre que l'API soit prête
+                    const checkYT = setInterval(() => {
+                        if (window.YT && window.YT.Player) {
+                            clearInterval(checkYT);
+                            new window.YT.Player(iframe, {
+                                events: {
+                                    'onStateChange': (event) => {
+                                        if (event.data === window.YT.PlayerState.ENDED) {
+                                            console.log(`[Overlay] 🎬 YouTube terminé, skip auto`);
+                                            window.memeQueue.skip();
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }, 200);
                 } else {
                     wrapper.remove();
                     window.memeQueue.skip();
@@ -84,9 +110,21 @@ function createMemeElement(drop) {
                 };
 
                 // Quand la vidéo finit → skip automatique
-                video.addEventListener("ended", () => {
+                const onVideoEnd = () => {
+                    if (video.dataset.ended) return;
+                    video.dataset.ended = "true";
                     console.log(`[Overlay] 🎬 Vidéo terminée, skip auto`);
                     window.memeQueue.skip();
+                };
+
+                video.addEventListener("ended", onVideoEnd);
+
+                // Workaround pour certaines vidéos (ex: Discord) sous Chromium
+                // où l'événement "ended" ne se déclenche jamais à cause d'une métadonnée de durée imprécise
+                video.addEventListener("timeupdate", () => {
+                    if (video.duration && video.currentTime >= video.duration - 0.15) {
+                        onVideoEnd();
+                    }
                 });
 
                 wrapper.appendChild(video);
@@ -198,8 +236,10 @@ async function removeDrop(drop) {
         if (m.tagName === "IFRAME") {
             m.src = ""; // Coupe la vidéo youtube immédiatement
         } else {
+            m.onerror = null; // Empêche le déclenchement du skip auto
             m.pause();
             m.removeAttribute("src");
+            m.load(); // Arrête le téléchargement en arrière-plan
         }
     });
 

@@ -95,6 +95,9 @@ class MemeQueue {
      * Termine le drop en cours et passe au suivant.
      */
     async _finishCurrent() {
+        if (this.isFinishing) return;
+        this.isFinishing = true;
+
         if (this.currentTimer) {
             clearTimeout(this.currentTimer);
             this.currentTimer = null;
@@ -105,6 +108,7 @@ class MemeQueue {
         }
 
         this.currentDrop = null;
+        this.isFinishing = false;
 
         // Petit délai entre les drops pour respirer
         setTimeout(() => this._playNext(), 300);
