@@ -83,8 +83,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Connexion
         elements.username.value = cfg.username || "";
-        elements.wsUrl.value = cfg.ws_url || import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
-        elements.guildId.value = cfg.guild_id || import.meta.env.VITE_GUILD_ID || "";
+        elements.wsUrl.value = cfg.ws_url || import.meta.env.VITE_WS_URL || "ws://memecast.shyphem.fr/ws";
+        elements.guildId.value = cfg.guild_id || import.meta.env.VITE_GUILD_ID || "1512149665338884136";
         elements.discordId.value = cfg.discord_id || "";
 
         // Audio
@@ -125,8 +125,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function collectConfig() {
         const activePos = document.querySelector(".pos-btn.active");
+        const oldCfg = loadConfig();
 
         return {
+            ...oldCfg,
             username: elements.username.value.trim(),
             ws_url: elements.wsUrl.value.trim(),
             guild_id: elements.guildId.value.trim(),
@@ -305,6 +307,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     guild_id: guildId,
                     discord_id: discordId,
                     username: elements.username.value.trim() || "Anonyme",
+                    secret: import.meta.env.VITE_WS_SECRET,
                 }));
             };
 
