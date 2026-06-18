@@ -20,6 +20,23 @@ from loguru import logger
 
 from server.websocket.manager import manager as ws
 
+
+# ============================================
+# Autocomplete : alias des clients headless
+# ============================================
+
+async def alias_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> list[app_commands.Choice[str]]:
+    """Propose les alias headless connectés."""
+    aliases = ws.get_headless_aliases()
+    return [
+        app_commands.Choice(name=f"🟢 {a}", value=a)
+        for a in aliases
+        if current.lower() in a.lower()
+    ][:25]
+
 # ============================================
 # Patterns d'URL supportés
 # ============================================
@@ -107,10 +124,12 @@ class DropCog(commands.Cog, name="Drop"):
         url="Lien YouTube, TikTok, Instagram, Twitter/X ou direct",
         text="Texte à afficher à l'écran",
         target="Cibler un pote spécifique (le mème s'affiche uniquement chez lui)",
+        alias="Cibler un client headless par son alias",
         size="Taille d'affichage",
         sound="Son à jouer (10s max)",
     )
     @app_commands.choices(size=SIZE_CHOICES)
+    @app_commands.autocomplete(alias=alias_autocomplete)
     async def drop(
         self,
         interaction: discord.Interaction,
@@ -118,6 +137,7 @@ class DropCog(commands.Cog, name="Drop"):
         url: Optional[str] = None,
         text: Optional[str] = None,
         target: Optional[discord.Member] = None,
+        alias: Optional[str] = None,
         size: Optional[app_commands.Choice[str]] = None,
         sound: Optional[discord.Attachment] = None,
     ):
@@ -179,11 +199,17 @@ class DropCog(commands.Cog, name="Drop"):
             guild_id=guild_id,
             payload=payload,
             target_discord_id=target_id,
+            target_alias=alias,
         )
 
         # Réponse Discord
         if reached > 0:
-            target_text = f" sur l'écran de **{target.display_name}**" if target else ""
+            if alias:
+                target_text = f" sur l'écran de **{alias}** (headless)"
+            elif target:
+                target_text = f" sur l'écran de **{target.display_name}**"
+            else:
+                target_text = ""
             content_text = ""
             if media:
                 content_text = f"📎 `{media.filename}`"
@@ -220,10 +246,19 @@ class DropCog(commands.Cog, name="Drop"):
         name="stop",
         description="⏹️ Stoppe le mème en cours",
     )
-    async def stop(self, interaction: discord.Interaction):
+    @app_commands.describe(
+        alias="Cibler un client headless par son alias",
+    )
+    @app_commands.autocomplete(alias=alias_autocomplete)
+    async def stop(self, interaction: discord.Interaction, alias: Optional[str] = None):
         from server.bot.config import config
         guild_id = str(interaction.guild_id) if interaction.guild_id else str(config.GUILD_ID)
-        reached = await ws.broadcast(guild_id, {"type": "stop"})
+
+        if alias:
+            ok = await ws.send_to_headless(alias, {"type": "stop"})
+            reached = 1 if ok else 0
+        else:
+            reached = await ws.broadcast(guild_id, {"type": "stop"})
 
         await interaction.response.send_message(
             f"⏹️ Stop envoyé à **{reached}** écran(s).",
@@ -238,10 +273,19 @@ class DropCog(commands.Cog, name="Drop"):
         name="skip",
         description="⏭️ Passe au mème suivant",
     )
-    async def skip(self, interaction: discord.Interaction):
+    @app_commands.describe(
+        alias="Cibler un client headless par son alias",
+    )
+    @app_commands.autocomplete(alias=alias_autocomplete)
+    async def skip(self, interaction: discord.Interaction, alias: Optional[str] = None):
         from server.bot.config import config
         guild_id = str(interaction.guild_id) if interaction.guild_id else str(config.GUILD_ID)
-        reached = await ws.broadcast(guild_id, {"type": "skip"})
+
+        if alias:
+            ok = await ws.send_to_headless(alias, {"type": "skip"})
+            reached = 1 if ok else 0
+        else:
+            reached = await ws.broadcast(guild_id, {"type": "skip"})
 
         await interaction.response.send_message(
             f"⏭️ Skip envoyé à **{reached}** écran(s).",
@@ -256,10 +300,19 @@ class DropCog(commands.Cog, name="Drop"):
         name="clear",
         description="🗑️ Vide la file d'attente de mèmes",
     )
-    async def clear(self, interaction: discord.Interaction):
+    @app_commands.describe(
+        alias="Cibler un client headless par son alias",
+    )
+    @app_commands.autocomplete(alias=alias_autocomplete)
+    async def clear(self, interaction: discord.Interaction, alias: Optional[str] = None):
         from server.bot.config import config
         guild_id = str(interaction.guild_id) if interaction.guild_id else str(config.GUILD_ID)
-        reached = await ws.broadcast(guild_id, {"type": "clear"})
+
+        if alias:
+            ok = await ws.send_to_headless(alias, {"type": "clear"})
+            reached = 1 if ok else 0
+        else:
+            reached = await ws.broadcast(guild_id, {"type": "clear"})
 
         await interaction.response.send_message(
             f"🗑️ File vidée sur **{reached}** écran(s).",

@@ -15,6 +15,23 @@ from loguru import logger
 from server.websocket.manager import manager as ws
 from server.bot.config import config
 
+
+# ============================================
+# Autocomplete : alias des clients headless
+# ============================================
+
+async def alias_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> list[app_commands.Choice[str]]:
+    """Propose les alias headless connectés."""
+    aliases = ws.get_headless_aliases()
+    return [
+        app_commands.Choice(name=f"🟢 {a}", value=a)
+        for a in aliases
+        if current.lower() in a.lower()
+    ][:25]
+
 class SoundboardCog(commands.Cog, name="Soundboard"):
     """Commandes pour jouer des sons."""
 
@@ -29,13 +46,16 @@ class SoundboardCog(commands.Cog, name="Soundboard"):
         sound="Fichier audio (mp3, wav, etc.)",
         url="Lien direct vers un fichier audio",
         target="Cibler un pote spécifique",
+        alias="Cibler un client headless par son alias",
     )
+    @app_commands.autocomplete(alias=alias_autocomplete)
     async def play(
         self,
         interaction: discord.Interaction,
         sound: Optional[discord.Attachment] = None,
         url: Optional[str] = None,
         target: Optional[discord.Member] = None,
+        alias: Optional[str] = None,
     ):
         if not sound and not url:
             await interaction.response.send_message(
@@ -68,10 +88,16 @@ class SoundboardCog(commands.Cog, name="Soundboard"):
             guild_id=guild_id,
             payload=payload,
             target_discord_id=target_id,
+            target_alias=alias,
         )
 
         if reached > 0:
-            target_text = f" chez **{target.display_name}**" if target else ""
+            if alias:
+                target_text = f" chez **{alias}** (headless)"
+            elif target:
+                target_text = f" chez **{target.display_name}**"
+            else:
+                target_text = ""
             embed = discord.Embed(
                 title="🔊 Son envoyé !",
                 description=f"Le son a été lancé avec succès{target_text}.",

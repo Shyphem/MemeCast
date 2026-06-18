@@ -1,0 +1,224 @@
+/* ============================================
+   MemeCast — Overlay Styles
+   
+   Tout est transparent sauf les mèmes eux-mêmes.
+   Les animations d'entrée/sortie sont définies ici.
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* ============================================
+   Container principal
+   ============================================ */
+
+#overlay-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+#react-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ============================================
+   Élément mème (image / gif / vidéo / texte)
+   ============================================ */
+
+.meme-element {
+    position: absolute;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    overflow: hidden;
+    /* Ombre portée pour détacher du fond */
+    filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.6));
+}
+
+.meme-element img,
+.meme-element video {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.meme-element video {
+    background: #000;
+}
+
+/* ============================================
+   Texte overlay
+   ============================================ */
+
+.meme-text {
+    padding: 24px 40px;
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.92), rgba(40, 10, 20, 0.92));
+    border: 2px solid rgba(255, 68, 68, 0.5);
+    border-radius: 16px;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    max-width: 70vw;
+    word-wrap: break-word;
+}
+
+/* ============================================
+   Sender badge
+   ============================================ */
+
+.meme-sender {
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 14px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    color: #aaa;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+}
+
+/* ============================================
+   Tailles
+   ============================================ */
+
+.size-small    { width: 20vw; }
+.size-medium   { width: 40vw; }
+.size-large    { width: 60vw; }
+.size-fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0;
+}
+.size-fullscreen img,
+.size-fullscreen video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    border-radius: 0;
+}
+
+/* ============================================
+   Positions
+   ============================================ */
+
+.pos-top_left     { top: 8vh;  left: 5vw;   }
+.pos-top          { top: 8vh;  left: 50%;  translate: -50% 0; }
+.pos-top_right    { top: 8vh;  right: 5vw;  }
+.pos-left         { top: 50%;  left: 5vw;   translate: 0 -50%; }
+.pos-center       { top: 50%;  left: 50%;   translate: -50% -50%; }
+.pos-right        { top: 50%;  right: 5vw;  translate: 0 -50%; }
+.pos-bottom_left  { bottom: 8vh; left: 5vw;  }
+.pos-bottom       { bottom: 8vh; left: 50%; translate: -50% 0; }
+.pos-bottom_right { bottom: 8vh; right: 5vw; }
+
+/* ============================================
+   Animations d'entrée
+   ============================================ */
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-100px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideOutUp {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-100px); }
+}
+
+@keyframes bounceIn {
+    0%   { opacity: 0; transform: scale(0.3); }
+    50%  { opacity: 1; transform: scale(1.05); }
+    70%  { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.anim-fade_in   { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.anim-fade_out  { animation: fadeOut 0.4s ease-in forwards; }
+.anim-bounce    { animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.anim-slide_in  { animation: slideInDown 0.5s ease-out forwards; }
+.anim-slide_out { animation: slideOutUp 0.4s ease-in forwards; }
+
+/* ============================================
+   Effets continus (pendant l'affichage)
+   ============================================ */
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes flip {
+    0%   { transform: perspective(600px) rotateY(0deg); }
+    100% { transform: perspective(600px) rotateY(360deg); }
+}
+
+.effect-spin  { animation: spin 1s linear infinite; }
+.effect-shake { animation: shake 0.5s ease-in-out infinite; }
+.effect-flip  { animation: flip 1.5s ease-in-out; }
+
+/* ============================================
+   Emojis (réactions)
+   ============================================ */
+
+.emoji-rain {
+    position: absolute;
+    font-size: 3rem;
+    pointer-events: none;
+    animation: emojiFloat 3s ease-out forwards;
+    z-index: 10000;
+}
+
+@keyframes emojiFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg) scale(0.3);
+    }
+}

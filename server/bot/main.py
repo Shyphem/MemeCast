@@ -74,7 +74,8 @@ async def websocket_endpoint(websocket: WebSocket):
     WebSocket pour les clients overlay.
 
     Protocole :
-    1. Client envoie {"type": "auth", "guild_id": "...", "discord_id": "..."}
+    1a. Client normal envoie {"type": "auth", "guild_id": "...", "discord_id": "..."}
+    1b. Client headless envoie {"type": "auth", "mode": "headless", "alias": "...", "guild_id": "..."}
     2. Serveur répond {"type": "auth_ok"} ou {"type": "auth_fail"}
     3. Serveur push les drops/réactions/contrôles
     4. Client peut envoyer {"type": "ping"} → serveur répond {"type": "pong"}
@@ -82,6 +83,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     guild_id = None
     discord_id = None
+    headless_alias = None
 
     try:
         # --- Authentification ---
@@ -96,26 +98,52 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.close(code=4001)
             return
 
-        guild_id = data.get("guild_id", "")
-        discord_id = data.get("discord_id", "")
-        username = data.get("username", "Anonyme")
+        mode = data.get("mode", "normal")
 
-        if not guild_id or not discord_id:
+        if mode == "headless":
+            # --- Mode headless : auth par alias ---
+            alias = data.get("alias", "").strip()
+            guild_id = data.get("guild_id", "")
+
+            if not alias or not guild_id:
+                await websocket.send_json({
+                    "type": "auth_fail",
+                    "reason": "alias et guild_id requis pour le mode headless",
+                })
+                await websocket.close(code=4002)
+                return
+
+            headless_alias = alias
+            ws.register_headless(websocket, alias, guild_id)
+
             await websocket.send_json({
-                "type": "auth_fail",
-                "reason": "guild_id et discord_id requis",
+                "type": "auth_ok",
+                "mode": "headless",
+                "alias": alias,
+                "message": f"Connecté en mode headless ! ({ws.total} client(s) en ligne)",
             })
-            await websocket.close(code=4002)
-            return
 
-        # Enregistrer la connexion
-        ws.register(websocket, discord_id, guild_id, username)
+        else:
+            # --- Mode normal : auth par discord_id ---
+            guild_id = data.get("guild_id", "")
+            discord_id = data.get("discord_id", "")
+            username = data.get("username", "Anonyme")
 
-        await websocket.send_json({
-            "type": "auth_ok",
-            "message": f"Connecté ! ({ws.total} client(s) en ligne)",
-            "online": ws.get_online_users(guild_id),
-        })
+            if not guild_id or not discord_id:
+                await websocket.send_json({
+                    "type": "auth_fail",
+                    "reason": "guild_id et discord_id requis",
+                })
+                await websocket.close(code=4002)
+                return
+
+            ws.register(websocket, discord_id, guild_id, username)
+
+            await websocket.send_json({
+                "type": "auth_ok",
+                "message": f"Connecté ! ({ws.total} client(s) en ligne)",
+                "online": ws.get_online_users(guild_id),
+            })
 
         # --- Boucle de réception (keep-alive) ---
         while True:
@@ -128,9 +156,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        logger.error(f"[WS] Erreur ({discord_id}): {e}")
+        client_label = headless_alias or discord_id or "inconnu"
+        logger.error(f"[WS] Erreur ({client_label}): {e}")
     finally:
-        if guild_id and discord_id:
+        if headless_alias:
+            ws.disconnect_headless(headless_alias)
+        elif guild_id and discord_id:
             ws.disconnect(discord_id, guild_id)
 
 
@@ -158,15 +189,16 @@ async def on_ready():
     logger.info(f"🤖 Bot connecté en tant que {bot.user} (ID: {bot.user.id})")
     logger.info(f"   Serveurs: {len(bot.guilds)}")
 
-    # Nettoyer les commandes du guild spécifique si elles existaient pour éviter les doublons
+    # Sync global
+    synced = await bot.tree.sync()
+    logger.info(f"   ✅ {len(synced)} commandes synchronisées (global)")
+
+    # Sync au guild principal pour mise à jour instantanée
     if config.GUILD_ID:
         guild = discord.Object(id=config.GUILD_ID)
-        bot.tree.clear_commands(guild=guild)
-        await bot.tree.sync(guild=guild)
-
-    # Sync global (désormais instantané sur Discord)
-    synced = await bot.tree.sync()
-    logger.info(f"   ✅ {len(synced)} commandes synchronisées (globalement pour tous les serveurs)")
+        bot.tree.copy_global_to(guild=guild)
+        guild_synced = await bot.tree.sync(guild=guild)
+        logger.info(f"   ✅ {len(guild_synced)} commandes synchronisées (guild {config.GUILD_ID})")
 
 
 # ============================================
@@ -211,7 +243,8 @@ async def main():
     await bot.load_extension("server.bot.cogs.drop")
     await bot.load_extension("server.bot.cogs.react")
     await bot.load_extension("server.bot.cogs.soundboard")
-    logger.info("✅ Cogs chargés : drop, react, soundboard")
+    await bot.load_extension("server.bot.cogs.headless")
+    logger.info("✅ Cogs chargés : drop, react, soundboard, headless")
 
     # Lancer bot + API en parallèle
     async with bot:

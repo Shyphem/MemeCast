@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MemeCast — Overlay</title>
+    <link rel="stylesheet" href="css/overlay.css" />
+</head>
+<body>
+    <!-- 
+        Cette page est la fenêtre overlay transparente.
+        Le body est 100% transparent, seuls les éléments enfants sont visibles.
+        Le click-through est géré côté Rust (set_ignore_cursor_events).
+    -->
+
+    <!-- Container pour les mèmes affichés -->
+    <div id="overlay-container"></div>
+
+    <!-- Container pour les emojis (réactions) -->
+    <div id="react-container"></div>
+
+    <script type="module">
+        import { invoke } from '@tauri-apps/api/core';
+        import { listen } from '@tauri-apps/api/event';
+
+        import { Effects } from './js/effects.js';
+        import { MemeQueue } from './js/queue.js';
+
+        window.Effects = Effects;
+        window.MemeQueue = MemeQueue;
+
+        await import('./js/overlay.js');
+
+        const wsModule = await import('./js/websocket.js');
+        const initWebSocket = wsModule.initWebSocket;
+        window.initWebSocket = initWebSocket;
+
+        const WS_URL = "ws://memecast.shyphem.fr/ws";
+        const GUILD_ID = "1512149665338884136";
+
+        async function boot() {
+            const alias = localStorage.getItem("memecast_alias");
+
+            if (!alias) {
+                console.warn("[MemeCast Headless] Setup requis. Ouverture fenetre...");
+                await invoke('show_setup');
+
+                await listen('config-saved', () => {
+                    const newAlias = localStorage.getItem("memecast_alias");
+                    initWebSocket(WS_URL, GUILD_ID, newAlias);
+                });
+            } else {
+                initWebSocket(WS_URL, GUILD_ID, alias);
+            }
+        }
+
+        // Cacher le curseur pour que la fenêtre transparente n'interfère pas
+        document.body.style.cursor = "none";
+
+        boot();
+        console.log("[MemeCast Headless] ✅ Overlay initialisé");
+    </script>
+</body>
+</html>

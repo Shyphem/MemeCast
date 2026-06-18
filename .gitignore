@@ -46,5 +46,6 @@ node_modules/
 package-lock.json
 
 # Tauri / Rust
-client/src-tauri/target/
-client/src-tauri/gen/
+**/src-tauri/target/
+**/src-tauri/gen/
+**/dist/
