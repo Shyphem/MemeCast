@@ -1,0 +1,43 @@
+name: Release MemeCast
+
+on:
+  push:
+    tags:
+      - 'v*' # S'exécute automatiquement quand tu crées un tag commençant par "v" (ex: v1.0.0)
+
+jobs:
+  release-client:
+    permissions:
+      contents: write # Autorise l'action à créer la release sur GitHub
+    runs-on: windows-latest # On compile sur Windows car l'app est pour Windows
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm install
+
+      - name: Build and Release Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Ces secrets doivent être ajoutés dans les Settings de ton dépôt GitHub
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: ./client
+          tagName: ${{ github.ref_name }} # Utilise le nom du tag (v1.0.0)
+          releaseName: 'MemeCast ${{ github.ref_name }}'
+          releaseBody: 'Nouvelle version de MemeCast !'
+          releaseDraft: false # Publie directement la release (pas de brouillon)
+          prerelease: false

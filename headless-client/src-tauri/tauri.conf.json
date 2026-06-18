@@ -72,7 +72,7 @@
       "endpoints": [
         "https://github.com/Shyphem/MemeCast/releases/latest/download/latest.json"
       ],
-      "pubkey": "PUBLIC_KEY_HERE"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IHB1YmxpYyBrZXk6IEZGODE2NDRGOUVGRDk0OEUKUldTT2xQMmVUMlNCLzhHRXBvTFhtZUxDMDdwMGlPY21SVkJkZGJGcFVKajU4bEtMSk5aMTFTSWwK"
     }
   }
 }
