@@ -52,6 +52,7 @@ class ReactCog(commands.Cog, name="React"):
         alias="Cibler un client headless par son alias",
     )
     @app_commands.autocomplete(alias=alias_autocomplete)
+    @app_commands.checks.cooldown(1, 3.0, key=lambda i: i.user.id)
     async def react(
         self,
         interaction: discord.Interaction,

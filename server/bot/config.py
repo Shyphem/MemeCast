@@ -19,6 +19,7 @@ class Config:
     HOST: str = os.getenv("SERVER_HOST", "0.0.0.0")
     PORT: int = int(os.getenv("SERVER_PORT", "8000"))
     API_SECRET: str = os.getenv("API_SECRET", "memecast-internal-secret")
+    WS_SECRET: str = os.getenv("WS_SECRET", "memecast-secret-key")
 
     # Constantes de l'app
     APP_NAME: str = "MemeCast"

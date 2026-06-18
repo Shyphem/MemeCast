@@ -49,6 +49,7 @@ class SoundboardCog(commands.Cog, name="Soundboard"):
         alias="Cibler un client headless par son alias",
     )
     @app_commands.autocomplete(alias=alias_autocomplete)
+    @app_commands.checks.cooldown(1, 3.0, key=lambda i: i.user.id)
     async def play(
         self,
         interaction: discord.Interaction,
@@ -60,6 +61,13 @@ class SoundboardCog(commands.Cog, name="Soundboard"):
         if not sound and not url:
             await interaction.response.send_message(
                 "❌ Tu dois fournir un fichier audio ou une URL !",
+                ephemeral=True,
+            )
+            return
+
+        if url and not url.startswith(("http://", "https://")):
+            await interaction.response.send_message(
+                "❌ L'URL n'est pas valide (elle doit commencer par http:// ou https://).",
                 ephemeral=True,
             )
             return

@@ -59,6 +59,7 @@ function initWebSocket(wsUrl, guildId, alias) {
             mode: "headless",
             alias: alias,
             guild_id: guildId,
+            secret: import.meta.env.VITE_WS_SECRET,
         }));
 
         // Ping keep-alive toutes les 30s

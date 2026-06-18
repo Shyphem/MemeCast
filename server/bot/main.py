@@ -98,6 +98,14 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.close(code=4001)
             return
 
+        if data.get("secret") != config.WS_SECRET:
+            await websocket.send_json({
+                "type": "auth_fail",
+                "reason": "Secret serveur invalide",
+            })
+            await websocket.close(code=4003)
+            return
+
         mode = data.get("mode", "normal")
 
         if mode == "headless":
@@ -182,6 +190,21 @@ bot = commands.Bot(
         name="vos mèmes 👀",
     ),
 )
+
+
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    if isinstance(error, discord.app_commands.CommandOnCooldown):
+        if interaction.response.is_done():
+            await interaction.followup.send(f"⏳ Doucement ! Attends {error.retry_after:.1f}s.", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"⏳ Doucement ! Attends {error.retry_after:.1f}s.", ephemeral=True)
+    else:
+        logger.error(f"[BOT] Erreur commande : {error}")
+        if not interaction.response.is_done():
+            await interaction.response.send_message("❌ Une erreur est survenue.", ephemeral=True)
+
+
 
 
 @bot.event

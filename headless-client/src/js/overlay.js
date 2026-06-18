@@ -13,9 +13,33 @@ const reactContainer = document.getElementById("react-container");
 const memeQueue = new window.MemeQueue();
 
 /**
+ * Vérifie si une URL est sécurisée (http ou https)
+ */
+function isCleanUrl(urlStr) {
+    if (!urlStr) return false;
+    try {
+        const parsed = new URL(urlStr);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * Crée l'élément DOM pour un drop.
  */
 function createMemeElement(drop) {
+    // Validation de sécurité stricte
+    if (drop.media_url && !isCleanUrl(drop.media_url)) {
+        console.error(`[Overlay] Blocage de sécurité: URL media invalide -> ${drop.media_url}`);
+        setTimeout(() => memeQueue.skip(), 100);
+        return null;
+    }
+    if (drop.sound_url && !isCleanUrl(drop.sound_url)) {
+        console.error(`[Overlay] Blocage de sécurité: URL son invalide -> ${drop.sound_url}`);
+        setTimeout(() => memeQueue.skip(), 100);
+        return null;
+    }
     const wrapper = document.createElement("div");
     wrapper.className = "meme-element";
     wrapper.id = `meme-${drop.id}`;

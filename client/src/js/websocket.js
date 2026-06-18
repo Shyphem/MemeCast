@@ -58,6 +58,7 @@ function initWebSocket(wsUrl, guildId, discordId) {
             guild_id: guildId,
             discord_id: discordId,
             username: username,
+            secret: import.meta.env.VITE_WS_SECRET,
         }));
 
         // Ping keep-alive toutes les 30s

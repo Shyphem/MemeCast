@@ -130,6 +130,7 @@ class DropCog(commands.Cog, name="Drop"):
     )
     @app_commands.choices(size=SIZE_CHOICES)
     @app_commands.autocomplete(alias=alias_autocomplete)
+    @app_commands.checks.cooldown(1, 3.0, key=lambda i: i.user.id)
     async def drop(
         self,
         interaction: discord.Interaction,
@@ -168,6 +169,13 @@ class DropCog(commands.Cog, name="Drop"):
             logger.info(f"[DROP] Attachment: {media.filename} → {media_type}")
 
         elif url:
+            if not url.startswith(("http://", "https://")):
+                await interaction.followup.send(
+                    "❌ L'URL n'est pas valide (elle doit commencer par http:// ou https://).",
+                    ephemeral=True
+                )
+                return
+
             media_url = url
             media_type = detect_media_type(url)
             platform = detect_platform(url)
@@ -250,6 +258,7 @@ class DropCog(commands.Cog, name="Drop"):
         alias="Cibler un client headless par son alias",
     )
     @app_commands.autocomplete(alias=alias_autocomplete)
+    @app_commands.checks.cooldown(1, 3.0, key=lambda i: i.user.id)
     async def stop(self, interaction: discord.Interaction, alias: Optional[str] = None):
         from server.bot.config import config
         guild_id = str(interaction.guild_id) if interaction.guild_id else str(config.GUILD_ID)
@@ -277,6 +286,7 @@ class DropCog(commands.Cog, name="Drop"):
         alias="Cibler un client headless par son alias",
     )
     @app_commands.autocomplete(alias=alias_autocomplete)
+    @app_commands.checks.cooldown(1, 3.0, key=lambda i: i.user.id)
     async def skip(self, interaction: discord.Interaction, alias: Optional[str] = None):
         from server.bot.config import config
         guild_id = str(interaction.guild_id) if interaction.guild_id else str(config.GUILD_ID)
@@ -304,6 +314,7 @@ class DropCog(commands.Cog, name="Drop"):
         alias="Cibler un client headless par son alias",
     )
     @app_commands.autocomplete(alias=alias_autocomplete)
+    @app_commands.checks.cooldown(1, 3.0, key=lambda i: i.user.id)
     async def clear(self, interaction: discord.Interaction, alias: Optional[str] = None):
         from server.bot.config import config
         guild_id = str(interaction.guild_id) if interaction.guild_id else str(config.GUILD_ID)
