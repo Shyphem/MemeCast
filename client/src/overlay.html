@@ -55,6 +55,16 @@
             initWebSocket(wsUrl, guildId, discordId);
         }
 
+        // Écouter les changements de configuration en direct
+        import { listen } from '@tauri-apps/api/event';
+        listen('config-saved', (event) => {
+            const cfg = event.payload;
+            if (cfg.guild_id && cfg.discord_id) {
+                console.log("[MemeCast] Configuration mise à jour, reconnexion...");
+                initWebSocket(cfg.ws_url || "ws://memecast.shyphem.fr/ws", cfg.guild_id, cfg.discord_id);
+            }
+        });
+
         console.log("[MemeCast] ✅ Overlay initialisé");
     </script>
 </body>

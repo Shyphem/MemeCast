@@ -241,8 +241,8 @@ class DropCog(commands.Cog, name="Drop"):
             await interaction.followup.send(embed=embed)
         else:
             await interaction.followup.send(
-                "⚠️ Aucun client MemeCast n'est connecté pour ce serveur.\n"
-                "Les membres doivent lancer l'application MemeCast sur leur PC !",
+                f"⚠️ Aucun client MemeCast n'est connecté pour ce serveur (ID attendu : `{guild_id}`).\n"
+                "Vérifiez que ce même ID est renseigné dans l'application MemeCast !",
                 ephemeral=True,
             )
 
