@@ -83,8 +83,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Connexion
         elements.username.value = cfg.username || "";
-        elements.wsUrl.value = cfg.ws_url || "ws://localhost:8000/ws";
-        elements.guildId.value = cfg.guild_id || "";
+        elements.wsUrl.value = cfg.ws_url || import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
+        elements.guildId.value = cfg.guild_id || import.meta.env.VITE_GUILD_ID || "";
         elements.discordId.value = cfg.discord_id || "";
 
         // Audio
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Position
         elements.toggleRandomPos.checked = cfg.random_position === true;
-        const activePos = cfg.position || "center";
+        const activePos = cfg.position || "top";
 
         elements.posButtons.forEach((btn) => {
             btn.classList.toggle("active", btn.dataset.pos === activePos);
@@ -107,7 +107,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Autostart
         try {
-            elements.toggleAutostart.checked = await isEnabled();
+            let autostartEnabled = await isEnabled();
+            if (!cfg.first_run_done) {
+                if (!autostartEnabled) {
+                    await enable();
+                    autostartEnabled = true;
+                }
+                cfg.first_run_done = true;
+                saveConfig(cfg);
+            }
+            elements.toggleAutostart.checked = autostartEnabled;
         } catch (e) {
             console.log("[System] Autostart non supporté dans cet environnement");
             elements.toggleAutostart.disabled = true;
@@ -174,7 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    const CURRENT_VERSION = "v1.1";
+    const CURRENT_VERSION = "v1.2.0";
 
     elements.btnCheckUpdate.addEventListener("click", async () => {
         elements.btnCheckUpdate.disabled = true;
