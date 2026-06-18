@@ -36,6 +36,10 @@
         const initWebSocket = wsModule.initWebSocket;
         window.initWebSocket = initWebSocket;
 
+        // Forcer le masquage de la barre des tâches (pour corriger le bug Windows des 2 icônes)
+        import { getCurrentWindow } from '@tauri-apps/api/window';
+        getCurrentWindow().setSkipTaskbar(true);
+
         // Initialisation : connecter au serveur WebSocket
         const config = JSON.parse(localStorage.getItem("memecast_config") || "{}");
         const wsUrl = config.ws_url || "ws://memecast.shyphem.fr/ws";

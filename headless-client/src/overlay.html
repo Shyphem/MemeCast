@@ -37,6 +37,10 @@
         const initWebSocket = wsModule.initWebSocket;
         window.initWebSocket = initWebSocket;
 
+        // Forcer le masquage de la barre des tâches
+        import { getCurrentWindow } from '@tauri-apps/api/window';
+        getCurrentWindow().setSkipTaskbar(true);
+
         const WS_URL = "ws://memecast.shyphem.fr/ws";
         const GUILD_ID = "1512149665338884136";
 
